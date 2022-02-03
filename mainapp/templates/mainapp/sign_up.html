@@ -1,0 +1,19 @@
+{% extends 'mainapp/base.html' %}
+{% load rest_framework %}
+
+{% block content %}
+    <div class="card" style="width: auto; margin: 100px 300px; padding: 50px 100px">
+        <div class="card-body">
+            <h3 class="text-center">Регистрация</h3>
+
+            <form action="{% url 'mainapp:sign-up' %}" enctype="multipart/form-data" method="post">
+                {% csrf_token %}
+                {% render_form serializer %}
+                <br>
+                <div class="d-grid gap-2 col-6 mx-auto">
+                    <input type="submit" class="btn btn-success btn-lg" value="Регистрация">
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
