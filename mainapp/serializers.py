@@ -1,22 +1,25 @@
 from django.contrib.auth.models import User
+
 from rest_framework import serializers
 
 from .models import Profile
 
 
-class SignupSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(label='Имя пользователя', max_length=20)
-    email = serializers.EmailField(label='Email', max_length=50)
-    first_name = serializers.CharField(label='Имя', max_length=15)
-    last_name = serializers.CharField(label='Фамилия', max_length=15)
-    password = serializers.CharField(label='Пароль', style={'input_type': 'password'}, write_only=True, min_length=6)
+class UserSerializer(serializers.ModelSerializer):
     confirm_password = serializers.CharField(
         label='Подтвердить пароль', style={'input_type': 'password'}, write_only=True, min_length=6
     )
 
     class Meta:
-        model = Profile
-        fields = ('username', 'email', 'password', 'confirm_password', 'first_name', 'last_name', 'gender', 'avatar')
+        model = User
+        fields = ('username', 'email', 'password', 'confirm_password', 'first_name', 'last_name')
+        extra_kwargs = {
+            'username': {'label': 'Имя пользователя'},
+            'email': {'label': 'Email'},
+            'password': {'style': {'input_type': 'password'}, 'write_only': True, 'min_length': 6, 'label': 'Пароль'},
+            'first_name': {'label': 'Имя'},
+            'last_name': {'label': 'Фамилия'}
+        }
 
     def validate(self, data):
         if data['password'] != data['confirm_password']:
@@ -33,14 +36,23 @@ class SignupSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(f'Пользователь с email {value} уже существует')
         return value
 
+
+class ProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer(label='Пользователь')
+
+    class Meta:
+        model = Profile
+        fields = ('user', 'avatar', 'gender')
+
     def create(self, validated_data):
+        user_data = validated_data['user']
         user = User(
-            email=validated_data['email'],
-            username=validated_data['username'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name'],
+            email=user_data['email'],
+            username=user_data['username'],
+            first_name=user_data['first_name'].title(),
+            last_name=user_data['last_name'].title(),
         )
-        user.set_password(validated_data['password'])
+        user.set_password(user_data['password'])
         user.save()
         profile = Profile(
             user=user,
@@ -48,4 +60,4 @@ class SignupSerializer(serializers.ModelSerializer):
             avatar=validated_data['avatar'],
         )
         profile.save()
-        return user
+        return profile

@@ -22,7 +22,7 @@ class Profile(models.Model):
     avatar = models.ImageField('Аватар', upload_to='avatars/')
 
     def __str__(self):
-        return f'{self.user.username} | {self.avatar}'
+        return self.user.username
 
     def add_watermark(self, wm=f'{settings.MEDIA_ROOT}/watermark.png'):
         # Добавление водяного знака на аватар профиля
@@ -38,8 +38,23 @@ class Profile(models.Model):
         name = self.avatar.name
         new_avatar_name = name.replace(avatar_name, f'{avatar_name}_watermarked')
         image.save(f'{settings.MEDIA_ROOT}\\avatars\\{new_avatar_name}')
-        return new_avatar_name
+        return f'\\avatars\\{new_avatar_name}'
 
     def save(self, *args, **kwargs):
-        self.avatar = self.add_watermark()
+        if '_watermarked' not in self.avatar.name:
+            self.avatar = self.add_watermark()
         super().save(*args, **kwargs)
+
+
+class Relationship(models.Model):
+    main_profile = models.ForeignKey(
+        Profile, verbose_name='Основной профиль профиль', related_name='main_profile', on_delete=models.CASCADE,
+        help_text='Профиль пользователя, которому понравился другой пользователь'
+    )
+    profile = models.ForeignKey(
+        Profile, verbose_name='Второй профиль', on_delete=models.CASCADE,
+        help_text='Профиль понравившегося пользователя'
+    )
+
+    def __str__(self):
+        return self.main_profile.user.username + ' | ' + self.profile.user.username
