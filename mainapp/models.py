@@ -47,6 +47,7 @@ class Profile(models.Model):
 
 
 class Relationship(models.Model):
+    """Модель отношений между пользователями"""
     main_profile = models.ForeignKey(
         Profile, verbose_name='Основной профиль профиль', related_name='main_profile', on_delete=models.CASCADE,
         help_text='Профиль пользователя, которому понравился другой пользователь'

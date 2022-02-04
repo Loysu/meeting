@@ -6,6 +6,7 @@ from .models import Profile
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Serializer для user'а"""
     confirm_password = serializers.CharField(
         label='Подтвердить пароль', style={'input_type': 'password'}, write_only=True, min_length=6
     )
@@ -38,13 +39,15 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
+    """Serializer для профиля пользователя"""
     user = UserSerializer(label='Пользователь')
 
     class Meta:
         model = Profile
-        fields = ('user', 'avatar', 'gender')
+        fields = '__all__'
 
     def create(self, validated_data):
+        # Создание user'а и профиля user'а при сохранении serializer'а
         user_data = validated_data['user']
         user = User(
             email=user_data['email'],

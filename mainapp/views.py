@@ -1,12 +1,14 @@
 from django.contrib.auth import login, authenticate
 from django.shortcuts import redirect, get_object_or_404
 from django.db.models import Q
+from rest_framework import generics
 
 from rest_framework.response import Response
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.views import APIView
 from rest_framework.reverse import reverse
 
+from .filters import ProfileFilter
 from .serializers import ProfileSerializer
 from .models import Profile, Relationship
 
@@ -25,7 +27,8 @@ class Signup(APIView):
         if serializer.is_valid():
             serializer.save()
             user = authenticate(
-                username=serializer.validated_data['user']['username'], password=serializer.validated_data['user']['password']
+                username=serializer.validated_data['username'],
+                password=serializer.validated_data['password']
             )
             login(request, user)
             return redirect(reverse('mainapp:base'))
@@ -61,3 +64,10 @@ class ProfileDetail(APIView):
             message=f'{profile1.user.first_name} заинтересован{"а" if profile1.gender == "female" else ""} в вас! '
                     f'Почта участника - {profile1.user.email}'
         )
+
+
+class ProfileList(generics.ListAPIView):
+    """Список профилей с возможной фильтрацией по полу, имени или фамилии"""
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
+    filterset_class = ProfileFilter
