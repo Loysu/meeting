@@ -1,10 +1,10 @@
 import re
 
+from PIL import Image
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
-
-from PIL import Image
 
 
 class Profile(models.Model):
@@ -20,6 +20,8 @@ class Profile(models.Model):
     user = models.OneToOneField(User, verbose_name='Пользователь', on_delete=models.CASCADE)
     gender = models.CharField('Пол', max_length=10, choices=GENDER_CHOICES)
     avatar = models.ImageField('Аватар', upload_to='avatars/')
+    latitude = models.DecimalField('Широта (в градусах)', max_digits=7, decimal_places=5)
+    longitude = models.DecimalField('Долгота (в градусах)', max_digits=8, decimal_places=5)
 
     def __str__(self):
         return self.user.username
@@ -32,7 +34,8 @@ class Profile(models.Model):
         new_width = 200
         ratio = new_width / watermark.width
         new_height = int(watermark.height * ratio)
-        watermark.thumbnail((new_width, new_height))  # уменьшение водяного знака в размере
+        # уменьшение водяного знака в размере
+        watermark.thumbnail((new_width, new_height))
         image.paste(watermark, (0, 0))
         avatar_name = re.sub(r'^\S+/|\.\S+$', '', self.avatar.name)
         name = self.avatar.name

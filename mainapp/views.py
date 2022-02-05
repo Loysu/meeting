@@ -1,8 +1,8 @@
 from django.contrib.auth import login, authenticate
 from django.shortcuts import redirect, get_object_or_404
 from django.db.models import Q
-from rest_framework import generics
 
+from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.views import APIView
@@ -27,8 +27,8 @@ class Signup(APIView):
         if serializer.is_valid():
             serializer.save()
             user = authenticate(
-                username=serializer.validated_data['username'],
-                password=serializer.validated_data['password']
+                username=serializer.validated_data['user']['username'],
+                password=serializer.validated_data['user']['password']
             )
             login(request, user)
             return redirect(reverse('mainapp:base'))
@@ -50,12 +50,15 @@ class ProfileDetail(APIView):
     def post(self, request, pk):
         profile1 = request.user.profile
         profile2 = self.get_object(pk)
-        Relationship.objects.create(main_profile=profile1, profile=profile2)
-        if Relationship.objects.filter(Q(main_profile=profile2) & Q(profile=profile1)).exists():
-            subject = '♡У вас появился потенциальный партнер!♡'
-            self.send_message(profile1, profile2, subject)
-            self.send_message(profile2, profile1, subject)
-        return redirect(reverse('mainapp:base'))
+        if not Relationship.objects.filter(Q(main_profile=profile1) & Q(profile=profile2)).exists():
+            Relationship.objects.create(main_profile=profile1, profile=profile2)
+            if Relationship.objects.filter(Q(main_profile=profile2) & Q(profile=profile1)).exists():
+                subject = '♡У вас появился потенциальный партнер!♡'
+                self.send_message(profile1, profile2, subject)
+                self.send_message(profile2, profile1, subject)
+                return Response(f'Почта участница - {profile2.user.email}')
+            return Response('Участник успешно добавлен в ваш список!')
+        return Response(f'Участник уже в вашем списке!')
 
     @staticmethod
     def send_message(profile1, profile2, subject):
@@ -68,6 +71,8 @@ class ProfileDetail(APIView):
 
 class ProfileList(generics.ListAPIView):
     """Список профилей с возможной фильтрацией по полу, имени или фамилии"""
-    queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     filterset_class = ProfileFilter
+
+    def get_queryset(self):
+        return Profile.objects.exclude(user=self.request.user)

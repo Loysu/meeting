@@ -45,6 +45,10 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
+        extra_kwargs = {
+            'latitude': {'min_value': -90, 'max_value': 90},
+            'longitude': {'min_value': -180, 'max_value': 180},
+        }
 
     def create(self, validated_data):
         # Создание user'а и профиля user'а при сохранении serializer'а
@@ -61,6 +65,8 @@ class ProfileSerializer(serializers.ModelSerializer):
             user=user,
             gender=validated_data['gender'],
             avatar=validated_data['avatar'],
+            latitude=validated_data['latitude'],
+            longitude=validated_data['longitude'],
         )
         profile.save()
         return profile
