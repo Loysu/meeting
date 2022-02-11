@@ -1,8 +1,8 @@
 
-Регистрация - api/clients/create
+Sign-up - api/clients/create
 
-Авторизация - api-auth/login
+Login - api-auth/login
 
-List - api/list
+List (filter) - api/list
 
 Detail/Send Email - api/clients/{id}/match
